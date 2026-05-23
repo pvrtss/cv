@@ -29,10 +29,8 @@ while(True):
     if not ret: 
         print("Конец видео")
         exit()
-    # на каждый фрейм
     for (x, y, size) in squares:
         half = size // 2
-        # Рисуем квадрат
         cv2.rectangle(frame, 
                     (x - half, y - half), 
                     (x + half, y + half), 

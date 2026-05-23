@@ -1,0 +1,84 @@
+{
+    "cameras": [
+        {
+            "camera_matrix": [
+                [
+                    619.2269790782533,
+                    0.0,
+                    324.75893895368074
+                ],
+                [
+                    0.0,
+                    621.5030170828801,
+                    253.3810901335745
+                ],
+                [
+                    0.0,
+                    0.0,
+                    1.0
+                ]
+            ],
+            "distortion_coefficients": [
+                [
+                    0.09049021943030652,
+                    -0.19637038624919925,
+                    0.005519762118369672,
+                    -0.0030478147858895343,
+                    0.06992618159798195
+                ]
+            ],
+            "mean_error": 0.0355166830880311,
+            "image_size": [
+                640,
+                480
+            ],
+            "num_images": 30,
+            "pattern_size": [
+                9,
+                6
+            ],
+            "square_size": 0.025,
+            "successful_images": [
+                "data/2.jpeg",
+                "data/6.jpeg",
+                "data/18.jpeg",
+                "data/11.jpeg",
+                "data/5.jpeg",
+                "data/14.jpeg",
+                "data/29.jpeg",
+                "data/9.jpeg",
+                "data/30.jpeg",
+                "data/15.jpeg",
+                "data/17.jpeg",
+                "data/20.jpeg",
+                "data/28.jpeg",
+                "data/19.jpeg",
+                "data/23.jpeg",
+                "data/24.jpeg",
+                "data/8.jpeg",
+                "data/12.jpeg",
+                "data/1.jpeg",
+                "data/7.jpeg",
+                "data/13.jpeg",
+                "data/25.jpeg",
+                "data/21.jpeg",
+                "data/4.jpeg",
+                "data/3.jpeg",
+                "data/22.jpeg",
+                "data/10.jpeg",
+                "data/27.jpeg",
+                "data/16.jpeg",
+                "data/26.jpeg"
+            ]
+        }
+    ],
+    "board": {
+        "type": "chess",
+        "pattern_size": [
+            9,
+            6
+        ],
+        "square_size": 0.025
+    },
+    "calibration_date": "23-05-2026_14-44-48"
+}

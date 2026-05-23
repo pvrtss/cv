@@ -5,7 +5,6 @@ from deep_sort_realtime.deepsort_tracker import DeepSort
 VIDEO_PATH = "video.mp4"
 OUTPUT_PATH = "output.mp4"
 
-# Более точная модель для crowded scenes
 model = YOLO("yolov8m.pt")
 
 tracker = DeepSort(

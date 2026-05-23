@@ -18,14 +18,12 @@ def order_points(pts):
     return rect
 
 
-# -------- аргументы --------
 insert_video = sys.argv[1]
 camera_video = sys.argv[2]
 
 cap = cv2.VideoCapture(camera_video)
 insert_cap = cv2.VideoCapture(insert_video)
 
-# -------- параметры видео --------
 fps = cap.get(cv2.CAP_PROP_FPS)
 
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -40,7 +38,6 @@ writer = cv2.VideoWriter(
     (width, height)
 )
 
-# -------- первый кадр --------
 ret, first_frame = cap.read()
 
 if not ret:
@@ -49,7 +46,6 @@ if not ret:
 
 gray0 = cv2.cvtColor(first_frame, cv2.COLOR_BGR2GRAY)
 
-# -------- поиск экрана --------
 edges = cv2.Canny(gray0,50,150)
 
 contours,_ = cv2.findContours(edges,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
@@ -79,18 +75,15 @@ if screen is None:
 
 screen_pts = order_points(screen.reshape(4,2)).astype(np.float32)
 
-# -------- маска экрана --------
 mask = np.zeros(gray0.shape,np.uint8)
 cv2.fillConvexPoly(mask,screen_pts.astype(int),255)
 
-# -------- ORB --------
 orb = cv2.ORB_create(2000)
 
 kp1, des1 = orb.detectAndCompute(gray0,mask)
 
 bf = cv2.BFMatcher(cv2.NORM_HAMMING, crossCheck=True)
 
-# -------- видео для вставки --------
 ret, insert_frame = insert_cap.read()
 
 h,w = insert_frame.shape[:2]

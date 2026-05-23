@@ -1,16 +1,8 @@
 import cv2
 import numpy as np
 
-# =========================================================
-# PATHS
-# =========================================================
-
 VIDEO_PATH = "video.mp4"
 CALIB_PATH = "stereo_calibration.npz"
-
-# =========================================================
-# LOAD CALIBRATION
-# =========================================================
 
 data = np.load(CALIB_PATH)
 
@@ -23,10 +15,6 @@ D2 = data["D2"]
 R = data["R"]
 T = data["T"]
 
-# =========================================================
-# OPEN VIDEO
-# =========================================================
-
 cap = cv2.VideoCapture(VIDEO_PATH)
 
 ret, frame = cap.read()
@@ -34,10 +22,6 @@ ret, frame = cap.read()
 if not ret:
     print("Ошибка чтения видео")
     exit()
-
-# =========================================================
-# SPLIT LEFT / RIGHT
-# =========================================================
 
 height, width, _ = frame.shape
 
@@ -47,10 +31,6 @@ left = frame[:, :half_width]
 right = frame[:, half_width:]
 
 h, w = left.shape[:2]
-
-# =========================================================
-# STEREO RECTIFICATION
-# =========================================================
 
 R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
     K1,
@@ -62,9 +42,6 @@ R1, R2, P1, P2, Q, roi1, roi2 = cv2.stereoRectify(
     T
 )
 
-# =========================================================
-# RECTIFICATION MAPS
-# =========================================================
 
 map1x, map1y = cv2.initUndistortRectifyMap(
     K1,
@@ -83,10 +60,6 @@ map2x, map2y = cv2.initUndistortRectifyMap(
     (w, h),
     cv2.CV_32FC1
 )
-
-# =========================================================
-# SGBM
-# =========================================================
 
 stereo = cv2.StereoSGBM_create(
 
@@ -109,10 +82,6 @@ stereo = cv2.StereoSGBM_create(
     speckleRange=32
 )
 
-# =========================================================
-# MAIN LOOP
-# =========================================================
-
 while True:
 
     ret, frame = cap.read()
@@ -120,16 +89,8 @@ while True:
     if not ret:
         break
 
-    # =====================================================
-    # SPLIT
-    # =====================================================
-
     left = frame[:, :half_width]
     right = frame[:, half_width:]
-
-    # =====================================================
-    # RECTIFICATION
-    # =====================================================
 
     rect_left = cv2.remap(
         left,
@@ -145,10 +106,6 @@ while True:
         cv2.INTER_LINEAR
     )
 
-    # =====================================================
-    # GRAYSCALE
-    # =====================================================
-
     gray_left = cv2.cvtColor(
         rect_left,
         cv2.COLOR_BGR2GRAY
@@ -159,20 +116,12 @@ while True:
         cv2.COLOR_BGR2GRAY
     )
 
-    # =====================================================
-    # DISPARITY
-    # =====================================================
-
     disparity = stereo.compute(
         gray_left,
         gray_right
     ).astype(np.float32)
 
     disparity = disparity / 16.0
-
-    # =====================================================
-    # NORMALIZE
-    # =====================================================
 
     disparity_visual = cv2.normalize(
         disparity,
@@ -184,18 +133,10 @@ while True:
 
     disparity_visual = np.uint8(disparity_visual)
 
-    # =====================================================
-    # COLORMAP
-    # =====================================================
-
     disparity_color = cv2.applyColorMap(
         disparity_visual,
         cv2.COLORMAP_JET
     )
-
-    # =====================================================
-    # SHOW
-    # =====================================================
 
     cv2.imshow("LEFT RECTIFIED", rect_left)
 

@@ -2,12 +2,10 @@ import cv2
 import numpy as np
 import sys
 
-# Проверка аргументов
 if len(sys.argv) < 2:
     print("Использование: python task1.py <путь_к_видео>")
     sys.exit(1)
 
-# Открываем видео
 cap = cv2.VideoCapture(sys.argv[1])
 detector = cv2.QRCodeDetector()
 
@@ -28,13 +26,11 @@ def calculate_angle_from_points(points):
     
     pts = points.astype(np.float32)
     
-    # Вычисляем длины сторон
     side1 = np.linalg.norm(pts[1] - pts[0])  # верхняя
     side2 = np.linalg.norm(pts[2] - pts[1])  # правая
     side3 = np.linalg.norm(pts[3] - pts[2])  # нижняя
     side4 = np.linalg.norm(pts[0] - pts[3])  # левая
     
-    # Средняя ширина и высота
     avg_width = (side1 + side3) / 2
     avg_height = (side2 + side4) / 2
     
@@ -42,12 +38,10 @@ def calculate_angle_from_points(points):
         ratio = min(avg_width, avg_height) / max(avg_width, avg_height)
         angle = (1 - ratio) * 90
         
-        # учитываем искажение (разница между противоположными сторонами)
         width_diff = abs(side1 - side3) / avg_width
         height_diff = abs(side2 - side4) / avg_height
         distortion = (width_diff + height_diff) / 2
         
-        # Итоговый угол с учетом искажения
         angle = angle * (1 + distortion)
         angle = min(90, max(0, angle))
         
@@ -67,17 +61,13 @@ while True:
     display = frame.copy()
     current_angle = 0
     
-    # Пытаемся распознать QR код стандартной функцией
     data, points, _ = detector.detectAndDecode(frame)
     
     if data and points is not None:
-        # QR код распознан без коррекции
         pts = points[0].astype(int)
-        # Рисуем контур
         for i in range(len(pts)):
             cv2.line(display, tuple(pts[i]), tuple(pts[(i+1) % len(pts)]), (0, 255, 0), 3)
         
-        # Вычисляем угол
         current_angle = calculate_angle_from_points(points[0])
         last_angle = current_angle
         
@@ -93,13 +83,10 @@ while True:
         was_decoding = True
         
     elif points is not None:
-        # QR код найден, но не распознан
         pts = points[0].astype(int)
-        # Рисуем контур желтым
         for i in range(len(pts)):
             cv2.line(display, tuple(pts[i]), tuple(pts[(i+1) % len(pts)]), (0, 255, 255), 3)
         
-        # Вычисляем угол
         current_angle = calculate_angle_from_points(points[0])
         last_angle = current_angle
         
@@ -108,13 +95,11 @@ while True:
         cv2.putText(display, f"Angle: {current_angle:.1f} deg", (250, 60), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 2)
         
-        # Фиксируем момент первой потери
         if was_decoding and loss_angle is None:
             loss_angle = current_angle
             print(f"\n!!! ПЕРВАЯ ПОТЕРЯ РАСПОЗНАВАНИЯ при угле {current_angle:.1f}° (кадр {frame_count}) !!!\n")
             was_decoding = False
         
-        # Пробуем коррекцию перспективы
         pts_f = points[0].astype(np.float32)
         rect = np.zeros((4, 2), dtype=np.float32)
         s = pts_f.sum(axis=1)
@@ -141,20 +126,17 @@ while True:
                     cv2.putText(display, "Correction: SUCCESS", (250, 90), 
                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
                     
-                    # Показываем исправленный QR
                     warped_small = cv2.resize(warped, (150, 150))
                     cv2.imshow('Corrected QR', warped_small)
                 else:
                     cv2.putText(display, "Correction: FAILED", (250, 90), 
                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
                     
-                    # Если коррекция не помогла, фиксируем окончательную потерю
                     if final_loss_angle is None and loss_angle is not None:
                         final_loss_angle = current_angle
                         print(f"\n!!! ОКОНЧАТЕЛЬНАЯ ПОТЕРЯ РАСПОЗНАВАНИЯ при угле {current_angle:.1f}° !!!")
                         print(f"QR код больше не распознается\n")
     else:
-        # QR код не найден в кадре
         cv2.putText(display, "NO QR CODE", (250, 30), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
         cv2.putText(display, f"Last angle: {last_angle:.1f} deg", (250, 60), 
@@ -165,7 +147,6 @@ while True:
             print(f"\n!!! ПОТЕРЯ РАСПОЗНАВАНИЯ (QR пропал) при угле {last_angle:.1f}° !!!\n")
             was_decoding = False
     
-    # Показываем статистику на экране
     cv2.putText(display, f"Max angle: {max_angle_no_corr:.1f} deg", (10, display.shape[0] - 90), 
                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1)
     cv2.putText(display, f"Max with corr: {max_angle_with_corr:.1f} deg", (10, display.shape[0] - 65), 
@@ -179,14 +160,12 @@ while True:
         cv2.putText(display, f"Final loss: {final_loss_angle:.1f} deg", (10, display.shape[0] - 15), 
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
     
-    # Показываем видео
     small_display = cv2.resize(display, (int(display.shape[1]*scale), int(display.shape[0]*scale)))
     cv2.imshow('QR Code Detection', small_display)
     
     if cv2.waitKey(30) & 0xFF == ord('q') or cv2.waitKey(30) & 0xFF == ord('Q'):
         break
 
-# Вывод результатов
 print("\n" + "="*60)
 print("ИТОГОВЫЕ РЕЗУЛЬТАТЫ:")
 print("="*60)

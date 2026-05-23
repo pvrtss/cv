@@ -52,7 +52,7 @@ class Base():
                                 [0, focal_length[0], center[1]],
                                 [0, 0, 1]], dtype="double"
                                 )
-        dist_coeffs = np.zeros((4,1))  # Assuming no lens distortion
+        dist_coeffs = np.zeros((4,1))
         rvecs = []
         tvecs = []
         resolution = {"w": focal_length[0], "h": focal_length[1]}
@@ -104,13 +104,11 @@ class ChessBoard(Board):
     def __init__(self, pattern_size=(9, 6), square_size=0.025, save_images_path=None):
         Board.__init__(self, pattern_size, save_images_path)
         self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 60, 0.001)
-        self.square_size = square_size  # in metres
+        self.square_size = square_size
         
-        # Создание объектных точек (3D точки в реальном мире)
         self.objp = np.zeros((self.pattern_size[1] * self.pattern_size[0], 3), np.float32)
         self.objp[:, :2] = np.mgrid[0:self.pattern_size[0], 0:self.pattern_size[1]].T.reshape(-1, 2) * self.square_size
         
-        # Счетчик сохраненных изображений
         self.image_counter = 0
 
     def get_board(self):
@@ -122,7 +120,7 @@ class ChessBoard(Board):
 
     def _find_board(self, image):
         gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        image_size = gray.shape[::-1]  # (width, height)
+        image_size = gray.shape[::-1]
         
         ret, corners = cv2.findChessboardCorners(gray, self.pattern_size, None)
         cv2.drawChessboardCorners(image, self.pattern_size, corners, ret)
@@ -138,7 +136,6 @@ class ChessBoard(Board):
         print("Начало калибровки по изображениям (шахматная доска)")
         print(f"{'='*60}")
         
-        # Поиск всех изображений в папке
         image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp', '*.tiff']
         images = []
         for ext in image_extensions:
@@ -151,31 +148,27 @@ class ChessBoard(Board):
         
         print(f"Найдено изображений: {len(images)}")
         
-        # Сбор точек для калибровки
-        objpoints = []  # 3D точки
-        imgpoints = []  # 2D точки на изображении
+        objpoints = []
+        imgpoints = []
         image_size = None
         successful_images = []
         
         for idx, img_path in enumerate(images, 1):
             print(f"\nОбработка изображения {idx}/{len(images)}: {os.path.basename(img_path)}")
             
-            # Загрузка изображения
             image = cv2.imread(img_path)
             if image is None:
                 print(f"  Не удалось загрузить изображение")
                 continue
             
-            # Поиск шахматной доски
             ret, corners, img_size = self._find_board(image)
-            image_size = img_size  # сохраняем размер изображения
+            image_size = img_size 
             
             if ret:
                 objpoints.append(self.objp)
                 imgpoints.append(corners)
                 successful_images.append(img_path)
                 
-                # Сохранение изображения с отрисованными углами
                 if self.save_images_path:
                     save_name = f"chessboard_calib_{self.image_counter:03d}.jpg"
                     self._save_image(image, save_name)
@@ -196,7 +189,6 @@ class ChessBoard(Board):
             print("- Обеспечьте хорошее освещение")
             return None
         
-        # Калибровка камеры
         print("\nВыполняется калибровка камеры...")
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
             objpoints, imgpoints, image_size, None, None
@@ -206,7 +198,6 @@ class ChessBoard(Board):
             print("Ошибка калибровки!")
             return None
         
-        # Вычисление средней ошибки перепроецирования
         total_error = 0
         for i in range(len(objpoints)):
             imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
@@ -215,7 +206,6 @@ class ChessBoard(Board):
         
         mean_error = total_error / len(objpoints)
         
-        # Вывод результатов
         print("\n" + "="*60)
         print("РЕЗУЛЬТАТЫ КАЛИБРОВКИ")
         print("="*60)
@@ -226,7 +216,6 @@ class ChessBoard(Board):
         print(f"Размер изображения: {image_size}")
         print("="*60)
         
-        # Формирование данных для сохранения
         camera_calibration = {
             "camera_matrix": mtx.tolist(),
             "distortion_coefficients": dist.tolist(),
@@ -246,7 +235,6 @@ class ChessBoard(Board):
         print("Начало калибровки по видео (шахматная доска)")
         print(f"{'='*60}")
         
-        # Открытие видеопотока
         if isinstance(source, str):
             if source.isdigit():
                 source = int(source)
@@ -263,8 +251,8 @@ class ChessBoard(Board):
         print("- Соберите минимум 10-15 кадров с разных ракурсов")
         print()
         
-        objpoints = []  # 3D точки
-        imgpoints = []  # 2D точки
+        objpoints = []
+        imgpoints = []
         captured_frames = 0
         image_size = None
         
@@ -274,14 +262,11 @@ class ChessBoard(Board):
                 print("Не удалось получить кадр")
                 break
             
-            # Создание копии для отображения
             display_frame = frame.copy()
             
-            # Поиск доски
             found, corners, img_size = self._find_board(display_frame)
             image_size = img_size
             
-            # Отображение информации
             cv2.putText(display_frame, f"Captured: {captured_frames}", (10, 30),
                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
             cv2.putText(display_frame, "Press ENTER to capture, ESC/Q to finish", (10, 60),
@@ -295,13 +280,12 @@ class ChessBoard(Board):
             
             key = cv2.waitKey(1) & 0xFF
             
-            if key == 13:  # ENTER
+            if key == 13:
                 if found and corners is not None:
                     objpoints.append(self.objp)
                     imgpoints.append(corners)
                     captured_frames += 1
                     
-                    # Сохранение изображения
                     if self.save_images_path:
                         save_name = f"captured_frame_{captured_frames:03d}.jpg"
                         self._save_image(frame, save_name)
@@ -322,8 +306,7 @@ class ChessBoard(Board):
         if captured_frames < 5:
             print("Ошибка: Недостаточно кадров для калибровки (минимум 5)")
             return None
-        
-        # Калибровка
+
         print("\nВыполняется калибровка камеры...")
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
             objpoints, imgpoints, image_size, None, None
@@ -333,7 +316,6 @@ class ChessBoard(Board):
             print("Ошибка калибровки!")
             return None
         
-        # Вычисление ошибки
         total_error = 0
         for i in range(len(objpoints)):
             imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
@@ -369,10 +351,9 @@ class CircleBoard(Board):
         Board.__init__(self, pattern_size, save_images_path)
         self.criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
         
-        self.circle_diameter = circle_diameter  # in metres
-        self.circle_spacing = circle_spacing  # in metres
+        self.circle_diameter = circle_diameter
+        self.circle_spacing = circle_spacing
         
-        # Настройка детектора кругов
         params = cv2.SimpleBlobDetector_Params()
         params.filterByColor = True
         params.filterByArea = True
@@ -436,7 +417,6 @@ class CircleBoard(Board):
         print("Начало калибровки по изображениям (круговая доска)")
         print(f"{'='*60}")
         
-        # Поиск всех изображений
         image_extensions = ['*.jpg', '*.jpeg', '*.png', '*.bmp']
         images = []
         for ext in image_extensions:
@@ -483,8 +463,7 @@ class CircleBoard(Board):
         if len(objpoints) < 5:
             print("Ошибка: Недостаточно изображений для калибровки")
             return None
-        
-        # Калибровка
+
         print("\nВыполняется калибровка камеры...")
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(
             objpoints, imgpoints, image_size, None, None
@@ -493,8 +472,7 @@ class CircleBoard(Board):
         if not ret:
             print("Ошибка калибровки!")
             return None
-        
-        # Вычисление ошибки
+
         total_error = 0
         for i in range(len(objpoints)):
             imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
@@ -620,11 +598,9 @@ class Calibration:
         self.all_frames = all_frames
         self.source_type = source_type
         
-        # Определение типа источника
         if self.input_type == 'video' and isinstance(calib_input, str) and calib_input.isdigit():
             self.calib_input = int(self.calib_input)
         
-        # Создание калибровочной доски
         board_type = board_type.lower()
         if "chess" in board_type:
             self.board = ChessBoard(pattern_size=pattern_size, square_size=square_size, 
@@ -675,8 +651,7 @@ class Calibration:
         now = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
         name = f"calibration__{now}.json"
         full_path = os.path.join(path, name)
-        
-        # Формирование полных данных для сохранения
+
         save_data = {
             "cameras": [data],
             "board": self.board.get_board() if self.board else None,
@@ -687,8 +662,7 @@ class Calibration:
             json.dump(save_data, json_file, indent=4)
         
         print(f"\nДанные калибровки сохранены в: {full_path}")
-        
-        # Вывод краткой сводки
+
         if 'mean_error' in data:
             print("\n" + "-"*60)
             print("ИТОГИ")
@@ -701,7 +675,6 @@ class Calibration:
                 print(f"Использовано изображений: {data['num_images']}")
             print("="*60)
             
-            # Оценка качества
             if data['mean_error'] < 0.1:
                 print("✓ Отлично! Ошибка калибровки очень низкая.")
             elif data['mean_error'] < 0.3:
@@ -727,15 +700,13 @@ if __name__ == '__main__':
     parser.add_argument('--all_frames', '-a', action='store_true', 
                        help='Использовать все кадры видео для калибровки')
     
-    # Параметры для шахматной доски
     parser.add_argument('--pattern_width', type=int, default=9,
                        help='Ширина шахматной доски (внутренние углы)')
     parser.add_argument('--pattern_height', type=int, default=6,
                        help='Высота шахматной доски (внутренние углы)')
     parser.add_argument('--square_size', type=float, default=0.025,
                        help='Размер квадрата в метрах (по умолчанию: 0.025)')
-    
-    # Параметры для круговой доски
+
     parser.add_argument('--circle_pattern_width', type=int, default=4,
                        help='Ширина круговой сетки')
     parser.add_argument('--circle_pattern_height', type=int, default=11,
@@ -747,14 +718,12 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
     
-    # Подготовка параметров для круговой доски
     circle_params = {
         'pattern_size': (args.circle_pattern_width, args.circle_pattern_height),
         'circle_diameter': args.circle_diameter,
         'circle_spacing': args.circle_spacing
     } if args.board_type.lower() == 'circle' else None
     
-    # Создание и запуск калибровки
     calibration = Calibration(
         args.source, 
         args.source_type, 
