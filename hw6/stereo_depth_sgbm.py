@@ -67,11 +67,11 @@ stereo = cv2.StereoSGBM_create(
 
     numDisparities=16 * 8,
 
-    blockSize=5,
+    blockSize=7,
 
-    P1=8 * 3 * 5**2,
+    P1=4 * 3 * 5**2,
 
-    P2=32 * 3 * 5**2,
+    P2=16 * 3 * 5**2,
 
     disp12MaxDiff=1,
 
