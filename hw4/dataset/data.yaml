@@ -1,0 +1,9 @@
+path: /content/dataset
+
+train: train/images
+val: val/images
+
+nc: 1
+
+names:
+  0: robot
